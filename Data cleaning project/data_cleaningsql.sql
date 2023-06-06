@@ -98,8 +98,10 @@ ALTER TABLE NashvilleHousing
 Add OwnerSplitState Nvarchar(255);
 
 Update NashvilleHousing
-SET OwnerSplitState = PARSENAME(REPLACE(OwnerAddress, ',','.'), 1) 
+SET OwnerSplitS tate = PARSENAME(REPLACE(OwnerAddress, ',','.'), 1) 
+------------------------------------------------------------------------------
 
+-- Change Y and N in "Sold as Vacant " field
 SELECT Distinct(SoldAsVacant), Count(SoldAsVacant)
 FROM NashVilleHousing
 Group by SoldAsVacant
@@ -111,3 +113,41 @@ Select SoldAsVacant
 		ELSE SoldAsVacant
 		END
 FROM NashVilleHousing
+
+UPDATE NashVilleHousing
+SET SoldAsVacant = CASE when SoldAsVacant = 'Y' THEN 'Yes'	
+		when SoldAsVacant = 'N' THEN 'No'
+		ELSE SoldAsVacant
+		END
+
+
+-- Remove Duplicates
+WITH RowNumCTE as (
+Select *,
+ROW_NUMBER() OVER (
+PArtition by ParcelID,
+			PropertyAddress,
+			SalePrice,
+			SaleDate,
+			LegalReference
+			ORDER by
+			UniqueID
+			) row_num
+From NashVilleHousing
+--order by ParcelID
+)
+select *
+From RowNumCTE
+Where row_num > 1
+--------------------------------------------------------------------------------
+
+-- Delete Unused Columns 
+
+Select * 
+From NashvilleHousing
+
+ALTER TABLE NashVilleHousing
+DROP COLUMN OwnerAddress, TaxDistrict, PropertyAddress
+
+ALTER TABLE NashVilleHousing
+DROP COLUMN SaleDate
